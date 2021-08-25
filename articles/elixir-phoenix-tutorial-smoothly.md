@@ -122,7 +122,7 @@ brew services start postgresql
 
 # やったか！？
 
-これらのエラーに対処して，`mix phx.server` 叩いて，ブラウザから http://localhost:4000 を開いたら......
+これらのエラーに対処して，プロジェクトのトップディレクトリから `mix phx.server` 叩いて，ブラウザから http://localhost:4000 を開いたら......
 
 ![](/images/elixir-phoenix-tutorial-smoothly/success.png)
 
