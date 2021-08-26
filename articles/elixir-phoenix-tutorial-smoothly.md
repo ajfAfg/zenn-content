@@ -8,7 +8,7 @@ published: true
 
 タイトルの通り，Phoenix 公式の[チュートリアル](https://hexdocs.pm/phoenix/up_and_running.html)を進めていたらエラーが出て困ったので，その原因と解決方法をまとめます．
 
-この記事が Phoenix のチュートリアルをサクッと試してみる助けとなってくれたら嬉しいです．
+この記事が Phoenix のチュートリアルをサクッと試してみる助けとなっていただけたら嬉しいです．
 
 # 対象読者
 
@@ -16,7 +16,7 @@ Phoenix 公式のチュートリアルを進めようと思っている方，進
 
 # 前提条件
 
-[こちらのドキュメント](https://hexdocs.pm/phoenix/installation.html)に従い，チュートリアルを進める上で必要な各ソフトウェアのインストールは完了しているものとします．
+[こちらのドキュメント](https://hexdocs.pm/phoenix/installation.html)に従い，チュートリアルを進める上で必要な各種ソフトウェアのインストールは完了しているものとします．
 
 # 環境
 
