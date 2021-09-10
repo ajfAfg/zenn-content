@@ -40,7 +40,7 @@ iex(1)> :filename.basedir(:user_cache, "erlang_history")
 
 ## シェル履歴の保存先を設定する
 
-シェル履歴に関する機能は Erlang の[`kernel` アプリケーション](https://erlang.org/doc/man/kernel_app.html)の一部として実装されています．`kernel` アプリケーションは設定パラメタを持っており，その中に履歴の保存先を表すパラメタ `shell_history_path` があります．このパラメタを利用することで，履歴の保存先を設定できます．例えば，erl では以下のように履歴の保存先を設定できます[^1]．
+シェル履歴に関する機能は Erlang の[`kernel` アプリケーション](https://erlang.org/doc/man/kernel_app.html)の一部として実装されています．`kernel` アプリケーションはいくつかの設定パラメタを持っており，その中に履歴の保存先を表すパラメタ `shell_history_path` があります．このパラメタを利用することで，履歴の保存先を設定できます．例えば，erl では以下のように履歴の保存先を設定できます[^1]．
 
 ```bash
 erl -kernel shell_history_path '"/foo/bar"'
@@ -49,11 +49,9 @@ erl -kernel shell_history_path '"/foo/bar"'
 IEx は erl と同様に `kernel` アプリケーションを利用しているので，同じ設定が IEx でも可能なら履歴の保存先を設定できそうです．
 
 IEx でアプリケーションの設定パラメタを設定する方法はいくつかあります．今回は永続的にシェル履歴を分けたいので，IEx の環境変数 `ELIXIR_ERL_OPTIONS` を利用することにします．
+環境変数 `ELIXIR_ERL_OPTIONS` では erl で利用できるオプションを設定できます[^2]．設定されたオプションは IEx で使用されます．
 
-環境変数 `ELIXIR_ERL_OPTIONS` では erl で利用できるオプションを設定できます．設定されたオプションは IEx で使用されます．
-IEx のドキュメントにはこの環境変数に関する説明がないのですが，`man` コマンドによる IEx のマニュアルの ENVIRONMENT という項目にしれっと説明が書かれています．
-
-以上を踏まえると，IEx のシェル履歴の保存先を設定するためには，環境変数 `ELIXIR_ERL_OPTIONS` を以下のように設定すれば良いことがわかります[^2]．
+以上を踏まえると，IEx のシェル履歴の保存先を設定するためには，環境変数 `ELIXIR_ERL_OPTIONS` を以下のように設定すれば良いことがわかります[^3]．
 
 ```bash
 export ELIXIR_ERL_OPTIONS='-kernel shell_history_path "/foo/bar"'
@@ -61,7 +59,7 @@ export ELIXIR_ERL_OPTIONS='-kernel shell_history_path "/foo/bar"'
 
 ## 設定例
 
-私は Erlang のシェル履歴と近い場所に履歴を保存したかったので，以下のようにパスを設定しました．
+私は Erlang のシェル履歴と近い場所に保存したかったので，以下のように設定しました．
 
 ```bash
 readonly elixir_history_path=$(elixir --eval ':filename.basedir(:user_cache, "elixir-history") |> IO.write()')
@@ -87,4 +85,5 @@ $ time elixir --eval ':filename.basedir(:user_cache, "elixir-history") |> IO.wri
 これで Erlang & Elixir 生活がさらに快適になるはず......！
 
 [^1]: 二重の引用付で囲まれた値を渡す必要があるみたいです．理由がわかっていないので，ご教授いただけると幸いです．
-[^2]: 値を囲む引用符は一重で問題ないです．
+[^2]: IEx のドキュメントにはこの環境変数に関する説明がないのですが，`man` コマンドによる IEx のマニュアルの ENVIRONMENT という項目にしれっと説明が書かれています．
+[^3]: 値を囲む引用符は一重で問題ないです．
