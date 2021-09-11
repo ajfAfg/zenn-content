@@ -17,7 +17,7 @@ export ERL_AFLAGS="-kernel shell_history enabled"
 しかし，その履歴の保存先は Erlang の erl と共有されているといった問題点があります．すなわち，IEx と erl で履歴が共有されます．
 Erlang と Elixir のシンタックスは大きく異なっているので，履歴を共有することによるメリットは特にないかと思われます．
 
-本記事ではこの問題点を解消するための方法を紹介します．
+本記事ではこの問題点を解決するための方法を紹介します．
 
 # 解決方法
 
@@ -59,7 +59,7 @@ export ELIXIR_ERL_OPTIONS='-kernel shell_history_path "/foo/bar"'
 
 ## 設定例
 
-私は Erlang のシェル履歴と近い場所に保存したかったので，以下のように設定しました．
+私は erl のシェル履歴と近い場所に保存したかったので，以下のように設定しました．
 
 ```bash
 readonly elixir_history_path=$(elixir --eval ':filename.basedir(:user_cache, "elixir-history") |> IO.write()')
@@ -70,7 +70,7 @@ export ELIXIR_ERL_OPTIONS="-kernel shell_history_path '$elixir_history_path'"
 
 `shell_history_path` には絶対パスを設定する必要があります．これは，相対パスで設定してもその相対パスが絶対パスに変換されないためです．
 
-また，ある環境では上記のパスの計算に以下で示すほどの時間がかかります．
+また，ある環境では上記のパスの計算に以下で示すほどの時間がかかりました．
 
 ```bash
 $ time elixir --eval ':filename.basedir(:user_cache, "elixir-history") |> IO.write()'
