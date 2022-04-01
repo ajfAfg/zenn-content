@@ -1,6 +1,6 @@
 ---
 title: "car と cdr【エイプリルフールネタ】"
-emoji: "🐛"
+emoji: "🚗"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["joke", "elixir", "lisp"]
 published: true
