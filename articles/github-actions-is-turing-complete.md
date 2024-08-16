@@ -29,7 +29,7 @@ publication_name: "cybozu_ept"
 
 - ループ処理はワークフローを再帰的に発火して実現
 - 用いるシェルスクリプトの機能は以下のみ:
-  - `cat` / `wc` / `mkdir` / `head` / `tail` / `exit`
+  - `cat` / `wc` / `mkdir` / `tee` / `head` / `tail` / `exit`
   - `git` / `gh`
   - 変数
   - リダイレクト
@@ -125,7 +125,7 @@ c.f. [Brainfuck - Wikipedia](https://en.wikipedia.org/wiki/Brainfuck)
 
 GitHub Actions で何らかの計算を行うためにはシェルスクリプトを書く必要がありますが、シェルスクリプトはチューリング完全なので、任意のシェルスクリプトプログラムが書けるとマズイです。もしその状態で GitHub Actions 製 Brainfuck を作っても、チューリング完全なシェルスクリプトだけで Brainfuck を実装できるはずなので、本当に GitHub Actions がチューリング完全なのか分からないからです。つまり、シェルスクリプトがチューリング完全だから実装できたのであって、GitHub Actions がチューリング完全だから実装できたわけではない可能性が残ります。そこで、今回はシェルスクリプトの機能として以下のみ使用します:
 
-- `cat` / `wc` / `mkdir` / `head` / `tail` / `exit`
+- `cat` / `wc` / `mkdir` / `tee` / `head` / `tail` / `exit`
 - `git` / `gh`
 - 変数
 - リダイレクト
