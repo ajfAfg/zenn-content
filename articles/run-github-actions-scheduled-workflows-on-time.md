@@ -3,8 +3,9 @@ title: "GitHub Actions の定期実行ワークフローを「時間通り」に
 emoji: "🕰️"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["githubactions", "github", "cron", "構文木"]
-published: false
+published: true
 publication_name: "cybozu_ept"
+published_at: 2025-08-27 12:00
 ---
 
 :::message
@@ -55,7 +56,7 @@ cronium の GitHub App をリポジトリにインストールします（c.f. [
 
 #### 2. ワークフローファイルにアノテーションを記述
 
-cronium で定期実行したいワークフローファイルにおける `on.workflow_dispatch` の上部に、`# cronium: '* * * * *'` という形式のコメントを記述します。以下に示す例の場合、cronium は毎朝 8 時と 10 分おきにワークフローを実行します:
+cronium で定期実行したいワークフローファイルにおける `on.workflow_dispatch` の上部に、`# cronium: '* * * * *'` という形式のコメントを記述します。以下に示す例の場合、cronium は毎朝 8 時と 10 分おきにワークフローを実行します。なお、UTC です。
 
 ```yaml
 name: demo
@@ -69,13 +70,16 @@ on:
 
 ### cronium のシステム概要
 
-cronium は単一のサーバーと GitHub App から成ります。サーバーは GitHub App がインストールされているリポジトリを 3 分おきにポーリングし、ワークフローファイルを収集します。そして、各ワークフローファイルからアノテーションを抽出し、時間が来たら `workflow_dispatch` する cron をサーバー上に作ります[^reason-for-using-workflow-dispatch]。なお、すでに cron がサーバー上に存在する場合は何もせず、アノテーションが消された場合は対応する cron を削除します。Kubernetes における Reconciliation Loop と同じメンタルモデルです。GitHub App の利用目的は、[cronium がサポートすべきリポジトリ一覧の取得](https://docs.github.com/ja/rest/apps/installations?apiVersion=2022-11-28#list-repositories-accessible-to-the-app-installation)と、GitHub API を叩くためのトークン発行です。以下にシステム構成図を示します:
+cronium は単一のサーバーと GitHub App から成ります。サーバーは GitHub App がインストールされているリポジトリを 3 分おきにポーリングし、ワークフローファイルを収集します。そして、各ワークフローファイルからアノテーションを抽出し、時間が来たら `workflow_dispatch` する cron をサーバー上に作ります[^reason-for-using-workflow-dispatch][^what-is-ref]。なお、すでに cron がサーバー上に存在する場合は何もせず、アノテーションが消された場合は対応する cron を削除します。Kubernetes における Reconciliation Loop と同じメンタルモデルです。GitHub App の利用目的は、[cronium がサポートすべきリポジトリ一覧の取得](https://docs.github.com/ja/rest/apps/installations?apiVersion=2022-11-28#list-repositories-accessible-to-the-app-installation)と、GitHub API を叩くためのトークン発行です。以下にシステム構成図を示します:
 
 [^reason-for-using-workflow-dispatch]: `repository_dispatch` ではなく `workflow_dispatch` を使う理由はぶっちゃけありません。（バイブス採用でした。）ただし、`workflow_dispatch` はワークフローファイルに記述されていがちなので、イベントを使い回せる嬉しさはあるのかなとは思います。
+[^what-is-ref]: 参照する `ref` は原則としてデフォルトブランチです。
 
 ![cronium のシステム概要図](/images/run-github-actions-scheduled-workflows-on-time/system-structure.drawio.png)
 
-<!-- TODO: 図を書く。Reconcile まで含めて書く。 -->
+:::details cronium の別種の嬉しさ
+`schedule` イベントを用いたワークフローの定期実行には、[ワークフローに関連付けられたアカウントが例えば退職によって非アクティブになると定期実行が止まる問題](https://docs.github.com/ja/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)もあったりします。cronium では外部サーバーから `workflow_dispatch` するので、この問題が発生しない嬉しさもあります。
+:::
 
 cronium は社内 Kubernetes クラスタである [Neco](https://blog.cybozu.io/entry/2025/03/19/112000) にデプロイしています[^reason-for-using-neco]。詳細は後述しますが、cronium は外部ストレージを用いず単一のサーバーで cron を管理する設計なので、Pod の数は 1 つだけです。
 
@@ -113,7 +117,7 @@ on:
 [^reason-for-using-npm-yaml]: [Deno は標準の YAML パーサーを備えています](https://docs.deno.com/examples/parsing_serializing_yaml/)が、これは抽象構文木のみ扱うので採用していません。
 
 あとは具象構文木を気合いで再帰的に走査して、`on.workflow_dispatch` の上部にあるコメントを取り出し、各コメントに対して正規表現などで cron 式を抽出すればよいです。仕様に従わないコメントは単に無視します。
-ハマりポイントとしては、`eemeli/yaml` における YAML の具象構文木では、アノテーションが `on.workflow_dispatch` の上部に来たり `on` の下部に来たりする点です。例えば、以下のワークフローファイルの場合、アノテーションは `on.workflow_dispatch` の上部に来ます:
+ハマりポイントとしては、直観的にはアノテーションが `on.workflow_dispatch` の上部に位置するのにも関わらず、`eemeli/yaml` における YAML の具象構文木ではアノテーションが `on` の下部に来る場合がある点です。例えば、以下のワークフローファイルの場合、アノテーションは `on.workflow_dispatch` の上部に来ます（具体的には、`workflow_dispatch` キーは、前のバリューからそのキーに到達するまでの情報としてアノテーションを持ちます）:
 
 ```yaml
 on:
@@ -124,7 +128,7 @@ on:
   workflow_dispatch:
 ```
 
-一方で、以下の場合、アノテーションは `on` の下部に来ます:
+一方で、以下の場合、アノテーションは `on` の下部に来ます（具体的には、`on` キーは、そのキーから次のバリューに到達するまでの情報としてアノテーションを持ちます）:
 
 ```yaml
 on:
@@ -136,11 +140,11 @@ on:
 
 ### cron の Reconcile
 
-cron の Reconcile のロジックを考える前に、cron の作り方と管理方法を考える必要があります。cron の作り方に関して、cronium では [`Hexagon/croner`](https://github.com/Hexagon/croner) というライブラリを利用して、Deno のランタイム上に cron を作っています[^reson-for-using-croner]。このライブラリで作る cron は停止可能です。cron の管理方法に関して、キーとしてオーナー名・リポジトリ名・ワークフロー名・cron 式の 4 つ組を持ち、バリューとして cron を持つ、グローバルなマップで管理します。外部ストレージを使っていない理由は、Reconcile するのは単一のサーバーであり、かつ、全ての情報は GitHub リポジトリに存在するので、データは複数の Pod で共有しなくていいし揮発してもいいと考えたためです。
+cron の Reconcile のロジックを考える前に、cron の作り方と管理方法を考える必要があります。cron の作り方に関して、cronium では [`Hexagon/croner`](https://github.com/Hexagon/croner) というライブラリを利用して、Deno のランタイム上に cron を作っています[^reason-for-using-croner]。このライブラリで作る cron は停止可能です。cron の管理方法に関して、キーとしてオーナー名・リポジトリ名・ワークフロー名・cron 式の 4 つ組を持ち、バリューとして cron を持つ、グローバルなマップで管理します。外部ストレージを使っていない理由は、Reconcile するのは単一のサーバーであり、かつ、全ての情報は GitHub リポジトリに存在するので、データは複数の Pod で共有しなくていいし揮発してもいいと考えたためです。
 
-[^reson-for-using-croner]: [Deno は標準の cron ライブラリを備えています](https://docs.deno.com/deploy/kv/manual/cron/)が、これは cron をプログラム実行中に停止できないので採用していません。
+[^reason-for-using-croner]: [Deno は標準の cron ライブラリを備えています](https://docs.deno.com/deploy/kv/manual/cron/)が、これは cron をプログラム実行中に停止できないので採用していません。
 
-以上の準備を踏まえて、Reconcile のロジックはキーに基づく集合演算によって差分を計算して cron を作成したり停止したりするだけです。具体的には、Actual State のキーの集合を $S$ とし、Desired State のキーの集合を $S'$ とすると、作成すべき cron のキーは $S' \setminus S$ で求められ、停止すべき cron のキーは $S \setminus S'$ で求められます。
+以上の準備を踏まえて、Reconcile のロジックはキーの集合に基づく集合演算によって差分を計算し、cron を作成したり停止したりするだけです。具体的には、Actual State のキーの集合を $S$ とし、Desired State のキーの集合を $S'$ とすると、作成すべき cron のキーは $S' \setminus S$ で求められ、停止すべき cron のキーは $S \setminus S'$ で求められます。
 注意点としては、JavaScript のオブジェクトに対する比較演算子は物理的等価性[^what-is-physical-equality]を見るので、[JavaScript 標準の集合ライブラリ](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Set)ではオブジェクトの集合演算が期待通りに動かないがちな点があります。この問題の対処方法はいくつか考えられますが、今回は [`immutable-js/immutable-js`](https://github.com/immutable-js/immutable-js) というライブラリを用いて作ったオブジェクトで集合演算しています。
 
 [^what-is-physical-equality]: 物理的等価性（physical equality）とは、データが存在するアドレスに基づく等しさです。例えば、`const foo = {x:1,y:1}; const bar = {x:1,y:1};` というプログラムがあったとして、`foo === foo` と `bar === bar` は成り立ちますが、`foo === bar` は成り立ちません。これはそれぞれのデータが存在するアドレスが異なるためです。
@@ -157,7 +161,7 @@ cron の Reconcile のロジックを考える前に、cron の作り方と管�
 
 ### なぜ Webhook を使わずポーリングしてる？
 
-主に 2 つ理由があります。1 つ目は、GitHub から Neco に通信するためには Neco に穴を開ける必要があるので、上長の承認を受ける必要があって大変だからです。2 つ目は、cron を作成・停止すべき一部のイベントが Webhook では検知できないからです。具体的には、cron は以下で列挙するタイミングで作成・停止すべきですが、ワークフローの enable/disable を Webhook で検知する方法は見つけられませんでした。
+cron を作成・停止すべき一部のイベントが Webhook では検知できないからです。具体的には、cron は以下で列挙するタイミングで作成・停止すべきですが、ワークフローの enable/disable を Webhook で検知する方法は見つけられませんでした。
 
 - GitHub App がインストール・アンインストールされたとき
 - ワークフローファイルを追加・編集・削除するコミットが push されたとき
@@ -168,7 +172,7 @@ cron の Reconcile のロジックを考える前に、cron の作り方と管�
 ### ポーリングの際、そのときの時間が cron 式の示す時間を超えてたら `workflow_dispatch` すればよくない？
 
 この手法だとサーバー上に cron を作らなくてよくて嬉しいですが、GitHub App トークンの rate limit に引っかかる可能性があったので断念しました。
-弊社のリポジトリは GitHub Enterprise Cloud organization に存在する[^ghes-exists]ので、[GitHub App トークンの rate limit は 15,000/h です](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28#primary-rate-limit-for-github-app-installations)。cronium のウリは「時間通り」にワークフローを実行することなので、そうなるとポーリングの間隔は最も短い 1 分としたくなります。そのため、1 回のポーリングで叩けるリクエスト数は 250（= 15,000/60）回となります。1 回のポーリングで発生するリクエスト数は、サポートすべき全てのリポジトリの数を $x$ とし、サポートすべき全てのワークフローの数を $y$ とすると、$1 + x + y$ で表せます。なお、最初の 1 回はリポジトリ一覧を取得している分です。弊社には複数の organization が存在しますが、最も活発に利用されている organization のリポジトリ数は 745 個（2025/08/25 現在、アーカイブを除く）なので、 cronium の利用を広げるなら 250 回の limit はかなり厳しいです。
+弊社のリポジトリは GitHub Enterprise Cloud organization に存在する[^ghes-exists]ので、[GitHub App トークンの rate limit は 15,000/h です](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28#primary-rate-limit-for-github-app-installations)。cronium のウリは「時間通り」にワークフローを実行することなので、そうなるとポーリングの間隔は最も短い 1 分としたくなります。そのため、1 回のポーリングで叩けるリクエスト数は 250（= 15,000/60）回となります。1 回のポーリングで発生するリクエスト数は、サポートすべき全てのリポジトリの数を $x$ とし、サポートすべき全てのワークフローの数を $y$ とすると、$1 + x + y$ で表せます。なお、最初の 1 回はリポジトリ一覧を取得している分です。弊社には複数の organization が存在しますが、最も活発に利用されている organization のリポジトリ数は 500 個を超える（2025/08/25 現在、アーカイブを除く）ので、 cronium の利用を広げるなら 250 回の limit はかなり厳しいです。
 
 [^ghes-exists]: 歴史的経緯により、GitHub Enterprise Server に存在するリポジトリもあります。
 
@@ -195,7 +199,7 @@ GitHub の rate limit の問題が解決したとして、cronium をスケー�
 1. Enterprise 向け GitHub App の利用
 2. 監視の充実
 
-1 つ目に関して、これまで弊社の誰でも cronium を使えそうな説明をしてきましたが、実はまだ生産性向上チームのメンバーしか使えないです（より正確には、生産性向上チームが持っている GitHub organization に属するリポジトリでのみ使えます）。[2025/03/10 にエンタープライズ向け GitHub App が GA となり](https://github.blog/changelog/2025-03-10-enterprise-owned-github-apps-are-now-generally-available/)、GitHub App を Enterprise アカウントの下に作れるようになったので、今後はこれを利用して cronium を弊社全体に広げていきたいです。
+1 つ目に関して、これまで弊社の誰でも cronium を使えそうな説明をしてきましたが、実はまだ生産性向上チームのメンバーしか使えないです（より正確には、生産性向上チームが持っている GitHub organization に属するリポジトリでのみ使えます）。[2025/03/10 に Enterprise 向け GitHub App が GA となり](https://github.blog/changelog/2025-03-10-enterprise-owned-github-apps-are-now-generally-available/)、GitHub App を Enterprise アカウントの下に作れるようになったので、今後はこれを利用して cronium を弊社全体に広げていきたいです。
 
 2 つ目に関して、現在は最低限の監視しかできていないので、弊社全体に利用を広げるためにも監視を充実させたいです。ワークフローが実行されるべき時間と実際に実行された時間の差に関する SLO を設定するのもいいなと考えています。
 
