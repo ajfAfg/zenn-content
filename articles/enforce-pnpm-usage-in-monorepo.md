@@ -15,11 +15,11 @@ published: true
 さて、npm パッケージのパッケージマネジャーとして pnpm を利用する場合、npm や yarn といった他のパッケージマネジャーの利用は禁止したいところです。その方法として、不完全なリストですが以下が知られています:
 
 - 個人単位
-  - （1） [`~/.zshrc` に `alias npm='echo "pnpm を利用してね"'` を記述する方法](https://zenn.dev/link/comments/78e6a55c279d8d)
+  - （1）[`~/.zshrc` に `alias npm='echo "pnpm を利用してね"'` を記述する方法](https://zenn.dev/link/comments/78e6a55c279d8d)
 - パッケージ単位
 
-  - （2） [パッケージ `only-allow` を使う方法](https://www.npmjs.com/package/only-allow)
-  - （3） [`package.json` の `engines` を使う方法](https://qiita.com/suin/items/a7bf214f48eb9b2d9afc)
+  - （2）[パッケージ `only-allow` を使う方法](https://www.npmjs.com/package/only-allow)
+  - （3）[`package.json` の `engines` を使う方法](https://qiita.com/suin/items/a7bf214f48eb9b2d9afc)
 
 これらの方法は概ね有効に働きますが、問題点もいくつかあります。まず、方法 1 は共同開発者に pnpm の利用を強制できず、方法 2 は `only-allow` が侵害されるリスクがあります。方法 3 は、monorepo 構成（今回は pnpm 標準の workspace のみ考えます）の場合、各パッケージのディレクトリ配下における `npm`/`yarn` の利用を禁止するためには、各パッケージに方法 3 を適用する必要があります。つまり、ルートの `package.json` の `engines` のみ設定すればよい訳ではなく、各パッケージの `package.json` の `engines` も同様に設定する必要があります。そのため、パッケージが増えると単純に面倒ですし、新しく作るパッケージで上記の設定を書き損じる可能性もあります。
 
