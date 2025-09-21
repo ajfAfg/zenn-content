@@ -1,6 +1,15 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ]
+    "config:recommended",
+    ":timezone(Asia/Tokyo)"
+  ],
+
+  // サプライチェーン攻撃対策
+  "minimumReleaseAge": "14 days",
+
+  "labels": ["renovate"],
+  "lockFileMaintenance": {
+    "enabled": true
+  }
 }
