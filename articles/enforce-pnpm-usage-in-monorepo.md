@@ -3,7 +3,7 @@ title: "monorepo でも pnpm の利用を強制させる"
 emoji: "⛓️"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["npm", "yarn", "pnpm", "javascript"]
-published: false
+published: true
 ---
 
 パッケージマネジャーとして pnpm の利用を強制させる方法はいくつか知られていますが、既存の方法では monorepo で管理するパッケージ内での強制は簡単ではありませんでした。本稿では、解決策として、Mise を用いてディレクトリ単位でエイリアスを張り、`npm` を叩くと「pnpm を利用してね」とだけ表示させる仕組みを紹介します。
