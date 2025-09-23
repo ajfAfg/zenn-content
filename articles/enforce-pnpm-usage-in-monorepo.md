@@ -67,7 +67,7 @@ ls -lah
 
 実例は本稿を管理している GitHub リポジトリにあります:
 
-https://github.com/ajfAfg/zenn-content
+https://github.com/ajfAfg/zenn-content/tree/7dcdd84bf6cb8ce8de4adaf4338a14c177fd013f
 
 ## まとめ
 
