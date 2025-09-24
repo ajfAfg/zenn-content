@@ -26,9 +26,9 @@ published: true
 
 ## 解決策
 
-[Mise](https://mise.jdx.dev/) というバージョン管理ツールを利用すると、コマンドや環境変数をディレクトリ単位[^about-directory-level]で設定できます。これと同じノリで、ディレクトリ単位でエイリアスを貼れば、先述した方法 1 をパッケージ単位で適用可能だと考えました。
+[Mise](https://mise.jdx.dev/) というバージョン管理ツールを利用すると、コマンドや環境変数をディレクトリ単位[^about-directory-level]で設定できます。これと同じノリで、ディレクトリ単位でエイリアスを貼れば、先述した方法 1 を monorepo 全体に適用可能だと考えました。
 
-[^about-directory-level]: Mise で設定した環境変数は子ディレクトリでも有効です。これは後述する direnv でも同様です。
+[^about-directory-level]: Mise で設定した環境変数はサブディレクトリでも有効です。これは後述する direnv でも同様です。
 
 という訳で、monorepo のルートで一度だけ設定すればよい、Mise だけを利用して `npm` と `yarn` のエイリアスを張る仕組みを考えました。開発者への負担は Mise の使用だけです。開発者はこれから説明する仕組みを施した monorepo のディレクトリ配下に移動するだけで、`npm` や `yarn` を叩くと「pnpm を利用してね」が表示されるようになります。
 
@@ -71,6 +71,6 @@ https://github.com/ajfAfg/zenn-content/tree/7dcdd84bf6cb8ce8de4adaf4338a14c177fd
 
 ## まとめ
 
-本稿では、monorepo（pnpm workspace）でも pnpm の利用を強制させるため、Mise を用いてパッケージ単位で `npm`/`yarn` のエイリアスを張る仕組みを紹介しました。
+本稿では、monorepo（pnpm workspace）でも pnpm の利用を強制させるため、Mise を用いて monorepo 全体で `npm`/`yarn` の利用を禁止する仕組みを紹介しました。
 
 Mise はいいぞ。
