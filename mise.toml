@@ -3,4 +3,4 @@
 
 [tools]
 node = '22.19.0'
-"npm:pnpm" = "10.17.0"
+"npm:pnpm" = "10.18.3"
