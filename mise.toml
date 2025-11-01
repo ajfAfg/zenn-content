@@ -2,5 +2,5 @@
 '_'.path = "{{config_root}}/.aliases"
 
 [tools]
-node = '22.19.0'
+node = '22.20.0'
 "npm:pnpm" = "10.18.3"
