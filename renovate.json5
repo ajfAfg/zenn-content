@@ -11,5 +11,12 @@
   "labels": ["renovate"],
   "lockFileMaintenance": {
     "enabled": true
-  }
+  },
+  "automerge": true,
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    }
+  ]
 }
